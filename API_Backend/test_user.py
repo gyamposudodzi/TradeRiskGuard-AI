@@ -23,10 +23,15 @@ def test_user_registration():
     print("🧪 Testing User Registration")
     
     payload = {
-        "email": "trader1@example.com",
-        "username": "trader1",
-        "password": "SecurePass123!"
+        "email": "trader2@example.com",
+        "username": "trader2",
+        "password": "SecurePass1234!"
     }
+    
+    #old payload = {"email": "trader1@example.com",
+     #   "username": "trader1",
+    #    "password": "SecurePass123!"
+    #}
     
     response = requests.post(
         f"{BASE_URL}/api/users/register",
@@ -41,8 +46,8 @@ def test_user_login():
     print("\n🧪 Testing User Login")
     
     payload = {
-        "email": "trader1@example.com",
-        "password": "SecurePass123!"
+        "email": "trader2@example.com",
+        "password": "SecurePass1234!"
     }
     
     response = requests.post(
