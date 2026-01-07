@@ -47,15 +47,15 @@ async def register_user(
     db.commit()
     db.refresh(user)
     
-    # Create default settings for user
-    settings = models.UserSettings(user_id=user.id)
-    db.add(settings)
+    # Create default settings for user (avoid overwriting 'settings')
+    user_settings = models.UserSettings(user_id=user.id)
+    db.add(user_settings)
     db.commit()
     
-    # Create access token
+    # Create access token using constant from auth.py
     access_token = auth.create_access_token(
         data={"sub": user.id},
-        expires_delta=timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
+        expires_delta=timedelta(minutes=auth.ACCESS_TOKEN_EXPIRE_MINUTES)
     )
     
     response_data = {

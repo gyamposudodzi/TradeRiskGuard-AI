@@ -14,9 +14,9 @@ pandas==2.1.3
 numpy==1.26.2
 
 # Your existing dependencies
-langchain-openai==0.0.5
-langchain-core==0.1.7
-pydantic==2.5.0
+langchain-openai
+langchain-core
+pydantic
 
 # Optional: PDF generation
 # weasyprint==60.1

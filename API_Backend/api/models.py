@@ -2,12 +2,12 @@
 Database models for storing analyses and user data
 """
 from sqlalchemy import Column, Integer, String, Float, DateTime, JSON, Boolean, ForeignKey
-from sqlalchemy.ext.declarative import declarative_base
+
 from sqlalchemy.orm import relationship
 from datetime import datetime
 import uuid
+from api.database import Base
 
-Base = declarative_base()
 
 def generate_uuid():
     return str(uuid.uuid4())
