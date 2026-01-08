@@ -25,3 +25,19 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# ======================
+# Python cache & compiled files
+# ======================
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Test result files
+*.test.json
+*_results.json
+
+# Ignore all test files in API_Backend
+*_test*.py
+test_*.py
+test_results.json
