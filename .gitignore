@@ -36,3 +36,8 @@ __pycache__/
 # Test result files
 *.test.json
 *_results.json
+
+# Ignore all test files in API_Backend
+*_test*.py
+test_*.py
+test_results.json
