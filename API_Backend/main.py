@@ -14,10 +14,10 @@ sys.path.append(os.path.join(os.path.dirname(__file__), 'api'))
 
 # Import database FIRST to create tables
 from api.database import init_db, engine, Base
-from api import modelss  # This imports all models
+from api import models  # This imports all models
 
 # Import routers
-from api.routers import analyze, risk, reports, users, dashboard, alerts
+from api.routers import analyze, risk, reports, users, dashboard, alerts, integrations
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -61,6 +61,7 @@ app.include_router(reports.router, prefix="/api/reports", tags=["Reports"])
 app.include_router(users.router, prefix="/api/users", tags=["Users"])
 app.include_router(dashboard.router, prefix="/api/dashboard", tags=["Dashboard"])
 app.include_router(alerts.router, prefix="/api/alerts", tags=["Predictive Alerts"])
+app.include_router(integrations.router, prefix="/api/integrations", tags=["Integrations"])
 
 # Health check endpoints
 @app.get("/")

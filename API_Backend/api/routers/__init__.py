@@ -8,6 +8,7 @@ from .reports import router as reports_router
 from .users import router as users_router
 from .dashboard import router as dashboard_router
 from .alerts import router as alerts_router
+from .integrations import router as integrations_router
 
 __all__ = [
     "analyze_router",
@@ -15,5 +16,6 @@ __all__ = [
     "reports_router",
     "users_router",
     "dashboard_router",
-    "alerts_router"
+    "alerts_router",
+    "integrations_router"
 ]
