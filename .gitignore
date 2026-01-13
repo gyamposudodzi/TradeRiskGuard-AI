@@ -41,3 +41,12 @@ __pycache__/
 *_test*.py
 test_*.py
 test_results.json
+
+requirements.txt
+C:\Users\user\Desktop\TradeRiskGuard-AI\API_Backend\requirements.txt
+C:\Users\user\Desktop\TradeRiskGuard-AI\API_Backend\.env
+API_Backend/requirements.txt
+.env
+API_Backend/.env
+TradeRiskGuard-AI\API_Backend\requirements.txt
+TradeRiskGuard-AI\API_Backend\.env

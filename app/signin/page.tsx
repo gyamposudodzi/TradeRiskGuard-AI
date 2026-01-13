@@ -19,6 +19,18 @@ export default function SignInPage() {
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState("")
 
+  const handlePasswordChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const newPassword = e.target.value
+    // Backend truncates to 72 characters, so check if those 72 chars are <= 72 bytes
+    const first72Chars = newPassword.slice(0, 72)
+    const bytes = new TextEncoder().encode(first72Chars).length
+    
+    if (bytes <= 72) {
+      setPassword(newPassword)
+      setError("")
+    }
+  }
+
   // Redirect if already authenticated
   useEffect(() => {
     if (!authLoading && isAuthenticated) {
@@ -41,14 +53,23 @@ export default function SignInPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setError("")
+    
+    // Validate password: first 72 chars must be <= 72 bytes (backend truncates by char)
+    const first72Chars = password.slice(0, 72)
+    const bytes = new TextEncoder().encode(first72Chars).length
+    if (bytes > 72) {
+      setError("Password contains characters that exceed byte limit.")
+      return
+    }
+    
     setIsLoading(true)
 
     try {
-      const success = await signIn(email, password)
-      if (success) {
+      const result = await signIn(email, password)
+      if (result.success) {
         router.push("/dashboard")
       } else {
-        setError("Invalid email or password")
+        setError(result.error || "Invalid email or password. Please try again.")
       }
     } catch (err) {
       setError("Something went wrong. Please try again.")
@@ -107,7 +128,7 @@ export default function SignInPage() {
                   type="password"
                   placeholder="Enter your password"
                   value={password}
-                  onChange={(e) => setPassword(e.target.value)}
+                  onChange={handlePasswordChange}
                   required
                   disabled={isLoading}
                 />
@@ -133,9 +154,6 @@ export default function SignInPage() {
             </form>
           </div>
 
-          <p className="text-center text-xs text-muted-foreground mt-6">
-            This is a mock authentication. Enter any email and password to continue.
-          </p>
         </div>
       </div>
       <Footer />

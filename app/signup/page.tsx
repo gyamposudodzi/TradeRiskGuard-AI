@@ -15,10 +15,25 @@ export default function SignUpPage() {
   const router = useRouter()
   const { signUp, isAuthenticated, isLoading: authLoading } = useAuth()
   const [name, setName] = useState("")
+  const [username, setUsername] = useState("")
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState("")
+
+  const handlePasswordChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const newPassword = e.target.value
+    // Backend truncates to 72 characters, so check if those 72 chars are <= 72 bytes
+    const first72Chars = newPassword.slice(0, 72)
+    const bytes = new TextEncoder().encode(first72Chars).length
+    
+    if (bytes <= 72) {
+      setPassword(newPassword)
+      setError("")
+    } else {
+      setError("Password contains characters that exceed byte limit. Try using simpler characters.")
+    }
+  }
 
   // Redirect if already authenticated
   useEffect(() => {
@@ -42,14 +57,23 @@ export default function SignUpPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setError("")
+    
+    // Validate password: first 72 chars must be <= 72 bytes (backend truncates by char)
+    const first72Chars = password.slice(0, 72)
+    const bytes = new TextEncoder().encode(first72Chars).length
+    if (bytes > 72) {
+      setError("Password contains characters that exceed byte limit. Try using simpler characters.")
+      return
+    }
+    
     setIsLoading(true)
 
     try {
-      const success = await signUp(email, password, name)
-      if (success) {
+      const result = await signUp(email, password, name, username)
+      if (result.success) {
         router.push("/dashboard")
       } else {
-        setError("Please fill in all fields")
+        setError(result.error || "Registration failed. Please check your details and try again.")
       }
     } catch (err) {
       setError("Something went wrong. Please try again.")
@@ -102,6 +126,19 @@ export default function SignUpPage() {
               </div>
 
               <div className="space-y-2">
+                <Label htmlFor="username">Username</Label>
+                <Input
+                  id="username"
+                  type="text"
+                  placeholder="johndoe"
+                  value={username}
+                  onChange={(e) => setUsername(e.target.value)}
+                  required
+                  disabled={isLoading}
+                />
+              </div>
+
+              <div className="space-y-2">
                 <Label htmlFor="email">Email</Label>
                 <Input
                   id="email"
@@ -121,10 +158,23 @@ export default function SignUpPage() {
                   type="password"
                   placeholder="Create a password"
                   value={password}
-                  onChange={(e) => setPassword(e.target.value)}
+                  onChange={handlePasswordChange}
                   required
                   disabled={isLoading}
                 />
+                {password && (() => {
+                  const first72 = password.slice(0, 72)
+                  const bytes = new TextEncoder().encode(first72).length
+                  const chars = password.length
+                  if (chars > 50 || bytes > 50) {
+                    return (
+                      <p className={`text-xs ${bytes > 72 ? 'text-destructive font-medium' : 'text-muted-foreground'}`}>
+                        {chars} chars, {bytes}/72 bytes {bytes > 72 && '(too long!)'}
+                      </p>
+                    )
+                  }
+                  return null
+                })()}
               </div>
 
               <Button type="submit" className="w-full" disabled={isLoading}>
@@ -147,9 +197,6 @@ export default function SignUpPage() {
             </form>
           </div>
 
-          <p className="text-center text-xs text-muted-foreground mt-6">
-            This is a mock authentication. Enter any details to create an account.
-          </p>
         </div>
       </div>
       <Footer />
