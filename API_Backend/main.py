@@ -9,6 +9,9 @@ from contextlib import asynccontextmanager
 import uvicorn
 from datetime import datetime
 
+from dotenv import load_dotenv
+load_dotenv()
+
 # Add api directory to Python path
 sys.path.append(os.path.join(os.path.dirname(__file__), 'api'))
 
