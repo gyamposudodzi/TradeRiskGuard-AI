@@ -40,3 +40,9 @@ API_Backend/tests/test_results.json
 
 # Virtual environment
 .venv/
+
+# Database files
+*.db
+*.sqlite
+*.sqlite3
+API_Backend/tradeguard.db

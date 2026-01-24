@@ -9,7 +9,6 @@ import sys
 
 # Create database engine
 DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///./tradeguard.db")
-print(f"📊 Database URL: {DATABASE_URL}")
 
 engine = create_engine(
     DATABASE_URL,
