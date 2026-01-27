@@ -11,8 +11,8 @@ import { RiskCharts } from "@/components/dashboard/risk-charts"
 import { TradesList } from "@/components/dashboard/trades-list"
 import { RecommendationsBox } from "@/components/dashboard/recommendations"
 import { RiskInsights } from "@/components/dashboard/risk-insights"
-// import { DashboardSummaryCard } from "@/components/dashboard/dashboard-summary"
-// import { DashboardInsightsCard } from "@/components/dashboard/dashboard-insights"
+import { PatternAnalysis } from "@/components/dashboard/pattern-analysis"
+import { NewsRisks } from "@/components/dashboard/news-risks"
 import { useAuth } from "@/contexts/auth-context"
 import { apiClient, DashboardSummary, DashboardInsight } from "@/lib/api"
 
@@ -24,7 +24,7 @@ export default function DashboardPage() {
   const [analysis, setAnalysis] = useState<any | null>(null)
   const [analysisLoading, setAnalysisLoading] = useState(false)
   const [analysisError, setAnalysisError] = useState<string | null>(null)
-  
+
   // New dashboard API states
   const [dashboardSummary, setDashboardSummary] = useState<DashboardSummary | null>(null)
   const [dashboardInsights, setDashboardInsights] = useState<DashboardInsight[]>([])
@@ -146,20 +146,25 @@ export default function DashboardPage() {
               {analysisError}
             </div>
           )}
-          
-          {/* Dashboard Summary and Insights from new APIs */}
-          {/* <div className="grid gap-6 mb-8 lg:grid-cols-2">
-            <DashboardSummaryCard summary={dashboardSummary} loading={summaryLoading} />
-            <DashboardInsightsCard insights={dashboardInsights} loading={insightsLoading} />
-          </div> */}
-          
+
+
+
           <RiskInsights analysis={analysis} />
           <RiskMetrics analysis={analysis} />
           <TradeMetrics analysis={analysis} />
           <RiskCharts analysis={analysis} />
+
+          {/* Dedicated Pattern & News Widgets */}
+          {analysis && (
+            <div className="grid gap-6 mb-8 lg:grid-cols-2">
+              <PatternAnalysis patterns={analysis.risk_results?.patterns || []} />
+              <NewsRisks eventRisks={analysis.risk_results?.risk_details?.event_trading} />
+            </div>
+          )}
+
           <RecommendationsBox analysis={analysis} />
           <TradesList analysis={analysis} />
-          
+
           {/* Generate Report Section */}
           {analysis && (
             <div className="mt-8 p-6 rounded-xl bg-gradient-to-r from-primary/5 via-accent/5 to-primary/5 border border-primary/20">
@@ -167,24 +172,24 @@ export default function DashboardPage() {
                 <div className="flex-1 text-center md:text-left">
                   <h3 className="text-xl font-bold text-foreground mb-2">Ready to Export Your Analysis?</h3>
                   <p className="text-muted-foreground text-sm max-w-xl">
-                    Generate a comprehensive PDF report with all your trading metrics, risk analysis, 
+                    Generate a comprehensive PDF report with all your trading metrics, risk analysis,
                     AI insights, and personalized recommendations. Perfect for record-keeping or sharing with mentors.
                   </p>
                   <div className="flex flex-wrap gap-3 mt-3 justify-center md:justify-start">
                     <span className="inline-flex items-center gap-1 px-2 py-1 bg-primary/10 rounded-full text-xs text-primary">
-                      <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd"/></svg>
+                      <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" /></svg>
                       Executive Summary
                     </span>
                     <span className="inline-flex items-center gap-1 px-2 py-1 bg-primary/10 rounded-full text-xs text-primary">
-                      <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd"/></svg>
+                      <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" /></svg>
                       Risk Metrics
                     </span>
                     <span className="inline-flex items-center gap-1 px-2 py-1 bg-primary/10 rounded-full text-xs text-primary">
-                      <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd"/></svg>
+                      <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" /></svg>
                       AI Insights
                     </span>
                     <span className="inline-flex items-center gap-1 px-2 py-1 bg-primary/10 rounded-full text-xs text-primary">
-                      <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd"/></svg>
+                      <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" /></svg>
                       Action Plan
                     </span>
                   </div>

@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react"
 import { apiClient } from "@/lib/api"
+import { AlertTriangle } from "lucide-react"
 
 type RiskInsightsProps = {
   analysis: any | null
@@ -66,8 +67,17 @@ export function RiskInsights({ analysis }: RiskInsightsProps) {
       )}
 
       {!error && summary && (
-        <div className="space-y-4\">
-          <p className="text-sm text-foreground leading-relaxed">{summary}</p>
+        <div className="space-y-4">
+          {summary.includes("[Offline Mode:") && (
+            <div className="inline-flex items-center gap-2 px-3 py-1.5 mb-2 rounded border border-red-500/30 bg-red-500/10 text-xs text-red-500 font-medium">
+              <AlertTriangle className="w-3.5 h-3.5" />
+              <span>Offline Mode: AI explanations paused (Quota Reached)</span>
+            </div>
+          )}
+
+          <p className="text-sm text-foreground leading-relaxed">
+            {summary.replace(/⚠️ \[Offline Mode:.*?\]/, "").trim()}
+          </p>
 
           {keyStrengths.length > 0 && (
             <div>
@@ -83,7 +93,7 @@ export function RiskInsights({ analysis }: RiskInsightsProps) {
           {keyRisks.length > 0 && (
             <div>
               <p className="text-xs font-semibold text-muted-foreground uppercase mb-2">Key risks</p>
-              <ul className="space-y-1\">
+              <ul className="space-y-1">
                 {keyRisks.map((item, idx) => (
                   <li key={idx} className="text-sm text-foreground">• {item}</li>
                 ))}
