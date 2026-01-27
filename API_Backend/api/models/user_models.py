@@ -51,6 +51,7 @@ class UserSettings(Base):
     # AI settings
     ai_enabled = Column(Boolean, default=True)
     preferred_model = Column(String, default="gpt-4o-mini")
+    openai_api_key_encrypted = Column(String, nullable=True)
     
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)

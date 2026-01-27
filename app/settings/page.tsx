@@ -29,7 +29,8 @@ import {
   Clock,
   BarChart3,
   Target,
-  Percent
+  Percent,
+  Trash2
 } from "lucide-react"
 
 export default function SettingsPage() {
@@ -48,8 +49,10 @@ export default function SettingsPage() {
     min_rr_ratio: 1.5,
     min_sl_usage_rate: 80,
     ai_enabled: true,
-    preferred_model: "gpt-4"
+    preferred_model: "gpt-4",
+    openai_api_key_configured: false
   })
+  const [openaiKeyInput, setOpenaiKeyInput] = useState("")
   const [userSettingsLoading, setUserSettingsLoading] = useState(true)
   const [userSettingsSaving, setUserSettingsSaving] = useState(false)
 
@@ -118,7 +121,12 @@ export default function SettingsPage() {
           // Load connections
           const connRes = await apiClient.listDerivConnections()
           if (connRes.success && connRes.data && connRes.data.connections.length > 0) {
-            setDerivConnection(connRes.data.connections[0])
+            const conn = connRes.data.connections[0]
+            setDerivConnection(conn)
+            // Pre-fill token if backend provides it (persistence feature)
+            if (conn.api_token) {
+              setDerivApiToken(conn.api_token)
+            }
           } else {
             setDerivConnection(null)
           }
@@ -134,6 +142,59 @@ export default function SettingsPage() {
       loadAllData()
     }
   }, [isAuthenticated, isLoading, router])
+
+  const handleSaveOpenAIKey = async () => {
+    if (!openaiKeyInput.trim()) return
+
+    setUserSettingsSaving(true)
+    setSaveStatus({ type: null, message: '' })
+
+    try {
+      // Send key to backend for encryption
+      const res = await apiClient.updateUserSettings({
+        ...userSettings,
+        openai_api_key: openaiKeyInput.trim()
+      })
+
+      if (res.success) {
+        setSaveStatus({ type: 'success', message: 'OpenAI Key saved securely!' })
+        setUserSettings(prev => ({ ...prev, openai_api_key_configured: true }))
+        setOpenaiKeyInput("") // Clear input for security
+      } else {
+        setSaveStatus({ type: 'error', message: res.error || 'Failed to save key' })
+      }
+    } catch (e) {
+      setSaveStatus({ type: 'error', message: 'An error occurred while saving key' })
+    } finally {
+      setUserSettingsSaving(false)
+      setTimeout(() => setSaveStatus({ type: null, message: '' }), 3000)
+    }
+  }
+
+  const handleClearOpenAIKey = async () => {
+    if (!confirm("Remove your custom OpenAI Key? You will revert to the default shared quota limits.")) return
+
+    setUserSettingsSaving(true)
+
+    try {
+      const res = await apiClient.updateUserSettings({
+        ...userSettings,
+        openai_api_key: "" // Empty string clears it in backend
+      })
+
+      if (res.success) {
+        setSaveStatus({ type: 'success', message: 'OpenAI Key removed.' })
+        setUserSettings(prev => ({ ...prev, openai_api_key_configured: false }))
+      } else {
+        setSaveStatus({ type: 'error', message: 'Failed to remove key' })
+      }
+    } catch (e) {
+      console.error(e)
+    } finally {
+      setUserSettingsSaving(false)
+      setTimeout(() => setSaveStatus({ type: null, message: '' }), 3000)
+    }
+  }
 
   const handleSaveUserSettings = async () => {
     setUserSettingsSaving(true)
@@ -195,7 +256,8 @@ export default function SettingsPage() {
       if (res.success) {
         setDerivConnection(res.data.connection)
         setSaveStatus({ type: 'success', message: 'Deriv account connected successfully!' })
-        setDerivApiToken("") // Clear token for security
+        // We do NOT clear the token here so it persists in the UI during this session
+        // setDerivApiToken("") 
       } else {
         setSaveStatus({ type: 'error', message: res.error || 'Failed to connect account' })
       }
@@ -493,6 +555,54 @@ export default function SettingsPage() {
                               onCheckedChange={(checked) => setUserSettings({ ...userSettings, ai_enabled: checked })}
                             />
                           </div>
+
+                          {userSettings.ai_enabled && (
+                            <div className="pt-2 pb-4 border-b">
+                              <Label className="text-base font-medium block mb-1">Custom OpenAI Key (Optional)</Label>
+                              <p className="text-sm text-muted-foreground mb-3">
+                                Provide your own API key to bypass usage limits.
+                                {userSettings.openai_api_key_configured && <span className="text-green-600 font-medium ml-2">✓ Key Configured</span>}
+                              </p>
+
+                              <div className="flex gap-2">
+                                <Input
+                                  type="password"
+                                  placeholder={userSettings.openai_api_key_configured ? "•••••••••••••••• (Configured)" : "sk-..."}
+                                  value={openaiKeyInput}
+                                  onChange={(e) => setOpenaiKeyInput(e.target.value)}
+                                  className="flex-1"
+                                />
+                                <Button
+                                  variant="outline"
+                                  onClick={handleSaveOpenAIKey}
+                                  disabled={!openaiKeyInput || userSettingsSaving}
+                                  size="sm"
+                                  className="whitespace-nowrap"
+                                >
+                                  {userSettings.openai_api_key_configured ? "Update Key" : "Save Key"}
+                                </Button>
+
+                                {userSettings.openai_api_key_configured && (
+                                  <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    className="text-destructive hover:text-destructive hover:bg-destructive/10"
+                                    onClick={() => {
+                                      setOpenaiKeyInput("");
+                                      handleClearOpenAIKey();
+                                    }}
+                                    title="Clear Key"
+                                  >
+                                    <Trash2 className="h-4 w-4" />
+                                  </Button>
+                                )}
+                              </div>
+                              <p className="text-xs text-muted-foreground mt-1.5 flex items-center gap-1">
+                                <Shield className="w-3 h-3" />
+                                Your key is encrypted securely. We never store it in plain text.
+                              </p>
+                            </div>
+                          )}
 
                           {userSettings.ai_enabled && (
                             <div className="space-y-2">
@@ -855,6 +965,21 @@ export default function SettingsPage() {
                                 </p>
                               </div>
 
+                              <div className="p-4 rounded-lg border bg-muted/30">
+                                <Label className="text-sm font-medium mb-1.5 block">Stored API Token</Label>
+                                <div className="flex gap-2">
+                                  <Input
+                                    type="password"
+                                    value={derivApiToken}
+                                    readOnly
+                                    className="bg-background text-muted-foreground font-mono text-xs"
+                                  />
+                                </div>
+                                <p className="text-[10px] text-muted-foreground mt-1.5">
+                                  To update your token, please disconnect and reconnect.
+                                </p>
+                              </div>
+
                               <div className="flex flex-col sm:flex-row gap-2">
                                 <Button variant="outline" className="flex-1" onClick={handleSyncDeriv} disabled={derivSyncing}>
                                   {derivSyncing ? (
@@ -912,6 +1037,6 @@ export default function SettingsPage() {
         </div>
       </div>
       <Footer />
-    </main>
+    </main >
   )
 }

@@ -34,9 +34,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return localStorage.getItem(AUTH_TOKEN_KEY)
   }
 
-  // Set up API client auth token getter
+  // Set up API client auth token getter and unauthorized handler
   useEffect(() => {
     apiClient.setAuthTokenGetter(getAuthToken)
+    // We cannot use the signOut function directly from context here because it's not defined yet
+    // But we can define a standalone logout function or use the state updater
+    apiClient.setOnUnauthorized(() => {
+      // Clear storage
+      localStorage.removeItem(AUTH_TOKEN_KEY)
+      localStorage.removeItem(AUTH_USER_KEY)
+      // Update state
+      setUser(null)
+      // Optionally redirect to signin
+      window.location.href = '/signin'
+    })
   }, [])
 
   // Check for stored auth on mount and validate token

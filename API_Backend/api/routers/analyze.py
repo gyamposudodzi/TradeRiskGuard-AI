@@ -51,7 +51,7 @@ from core.news_service import NewsService
 # CORE PROCESSING (CPU-BOUND)
 # =====================================================
 
-def process_trade_data(df: pd.DataFrame):
+def process_trade_data(df: pd.DataFrame, openai_api_key: Optional[str] = None):
     """Process trade data and return analysis results (CPU Bound)"""
 
     # Calculate metrics
@@ -93,12 +93,6 @@ def process_trade_data(df: pd.DataFrame):
         print(f"News risk detection failed: {e}")
             
     # Detect patterns (ML + Heuristics)
-    
-    # Detect patterns (ML + Heuristics)
-    # pattern_detector = PatternDetector(df)
-    # patterns = pattern_detector.detect_all_patterns()
-    # risk_results["patterns"] = patterns
-    
     try:
         pattern_detector = PatternDetector(df)
         patterns = pattern_detector.detect_all_patterns()
@@ -112,8 +106,8 @@ def process_trade_data(df: pd.DataFrame):
     scorer = RiskScorer()
     score_result = scorer.calculate_score(risk_results["risk_details"])
 
-    # Generate AI explanations
-    ai_explainer = AIRiskExplainer()
+    # Generate AI explanations using User's Key if provided
+    ai_explainer = AIRiskExplainer(openai_api_key=openai_api_key)
     ai_explanations = ai_explainer.generate_explanation(
         metrics,
         risk_results,
@@ -225,8 +219,25 @@ async def analyze_trades(
             file_size = len(contents)
             trade_count = len(df)
 
+        # Prepare OpenAI key if available
+        openai_api_key = None
+        if current_user:
+            # We need to fetch the full user settings + decrypted key
+            # Since current_user is from a token dependency, it might not have the settings relation loaded or refreshed
+            # Let's fetch settings explicitly
+            query = select(models.UserSettings).where(models.UserSettings.user_id == current_user.id)
+            settings_res = await db.execute(query)
+            user_settings = settings_res.scalars().first()
+            
+            if user_settings and user_settings.openai_api_key_encrypted:
+                try:
+                    from api.utils.encryption import encryption_service
+                    openai_api_key = encryption_service.decrypt(user_settings.openai_api_key_encrypted)
+                except Exception as e:
+                    print(f"Failed to decrypt user OpenAI key: {e}")
+
         # Offload heavy calculation to threadpool
-        results = await run_in_threadpool(process_trade_data, df)
+        results = await run_in_threadpool(process_trade_data, df, openai_api_key)
 
         # Async save
         analysis = await save_analysis_to_db(

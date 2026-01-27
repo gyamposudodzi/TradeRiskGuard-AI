@@ -101,6 +101,8 @@ export interface UserSettings {
   min_sl_usage_rate: number
   ai_enabled: boolean
   preferred_model: string
+  openai_api_key?: string
+  openai_api_key_configured?: boolean
 }
 
 export interface AlertSettings {
@@ -154,6 +156,7 @@ export interface DashboardInsight {
 class APIClient {
   private baseURL: string
   private getAuthToken: (() => string | null) | null = null
+  private onUnauthorized: (() => void) | null = null
 
   constructor(baseURL: string) {
     this.baseURL = baseURL
@@ -161,6 +164,10 @@ class APIClient {
 
   setAuthTokenGetter(getter: () => string | null) {
     this.getAuthToken = getter
+  }
+
+  setOnUnauthorized(callback: () => void) {
+    this.onUnauthorized = callback
   }
 
   private getAuthHeaders(base: HeadersInit = {}): HeadersInit {
@@ -194,6 +201,13 @@ class APIClient {
       const data = await response.json()
 
       if (!response.ok) {
+        // Handle 401 Unauthorized globally
+        if (response.status === 401) {
+          if (this.onUnauthorized) {
+            this.onUnauthorized()
+          }
+        }
+
         let errorMessage = data.detail || data.error || data.message || 'An error occurred'
 
         // Handle Pydantic validation errors (array of objects)

@@ -90,11 +90,13 @@ class UserSettingsUpdate(BaseModel):
     min_sl_usage_rate: Optional[float] = None
     ai_enabled: Optional[bool] = None
     preferred_model: Optional[str] = None
+    openai_api_key: Optional[str] = None
 
 class UserSettingsResponse(UserSettingsUpdate):
     user_id: str
     created_at: datetime
     updated_at: datetime
+    openai_api_key_configured: bool = False
     
     class Config:
         from_attributes = True

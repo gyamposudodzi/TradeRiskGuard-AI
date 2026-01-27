@@ -596,9 +596,24 @@ async def list_deriv_connections(
         result = await db.execute(query)
         connections = result.scalars().all()
         
+        print(f"DEBUG: User {current_user.id} has {len(connections)} Deriv connections")
+
+        connections_data = []
+        for connection in connections:
+            data = connection.to_dict()
+            # Decrypt token for owner (requested by user for persistence)
+            if connection.api_token_encrypted:
+                try:
+                    decrypted_token = encryption_service.decrypt(connection.api_token_encrypted)
+                    data["api_token"] = decrypted_token
+                    print(f"DEBUG: Decrypted token for connection {connection.id}")
+                except Exception as e:
+                    print(f"Failed to decrypt token for connection {connection.id}: {e}")
+            connections_data.append(data)
+
         return schemas.APIResponse.success_response(
             data={
-                "connections": [connection.to_dict() for connection in connections],
+                "connections": connections_data,
                 "total": len(connections)
             }
         )
